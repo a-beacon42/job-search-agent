@@ -1,0 +1,52 @@
+@startuml job_search
+!NEW_C4_STYLE=1
+!include sprites.puml
+
+title "Job Search Assistant"
+left footer <font size=12>    Alex Beacon | %date("yyyy-MM-dd") | v1.0.0 </font>
+
+Person(user, "Job Seeker")
+System_Boundary(human_layer, "Human Layer") {
+    System(gmail, "gmail", $sprite="google")
+    System(browser, "chrome", $sprite="chrome")
+}
+
+System_Boundary(s1, "Job Search Assistant") {
+    System(find_jobs, "Find & Apply") {
+        Container(search, "Search Jobs", "Searches for job listings across multiple platforms.", $sprite="magnifying_glass")
+        Container(summary, "Summary Service", "Generates summaries of job listings and companyinformation.", $sprite="pen")
+        Container(writer, "Application Writer", "Generates tailored resumes and cover letters.", $sprite="pen")
+    }
+    System(prepare_interviews, "Prepare for Interviews") {
+        Container(interview_coach, "Interview Coach", "Chatbot assistant for interview preparation", $sprite="robot")
+    }
+    SystemDb(track, "Track Applications", "Stores job data, company data, selections, materials (cover letter, resume, interview prep), and statuses.", $sprite="sqllite")
+    System(email, "Email Service", "Handles sending and receiving emails.", $sprite="email")
+    ' System(llm, "LLM Service", "handles NLP & generation", $sprite="AzureCognitiveServices")
+}
+
+System_Boundary(boards, "Job Boards") {
+    Container(linkedin, "LinkedIn", $sprite="linkedin")
+    Container(greenhouse, "Greenhouse", $sprite="tree")
+}
+Container(trigger, "Daily Trigger", $sprite="clock")
+
+Rel(trigger, search, "1. triggers search")
+Rel(user, gmail, "reads email, selects jobs")
+Rel(user, browser, "applies to jobs, \ntracks application status,\nreviews interview prep materials")
+Rel(email, gmail, "sends notifications")
+Rel(gmail, email, "submits job selection")
+Rel(search, linkedin, "2. searches for jobs")
+Rel(search, summary, "generates summaries")
+Rel(summary, track, "save job data")
+Rel(summary, email, "sends summaries")
+Rel(writer, track, "gets application materials")
+' Rel_U(writer, track, "gets application materials")
+Rel(writer, email, "sends notification")
+Rel(browser, track, "loads application data")
+Rel(browser, interview_coach, "generate interview prep materials")
+Rel(interview_coach, track, "get job & company info\nwrite interview prep materials")
+' Lay_D(track, writer)
+' LAYOUT_LANDSCAPE()ds
+' SHOW_LEGEND()
+@enduml

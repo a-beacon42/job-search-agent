@@ -1,0 +1,30 @@
+@startuml sprites
+
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+!define AzurePuml https://raw.githubusercontent.com/plantuml-stdlib/Azure-PlantUML/release/2-2/dist
+!includeurl AzurePuml/AzureCommon.puml
+!includeurl AzurePuml/Compute/AzureFunction.puml
+!includeurl AzurePuml/AIMachineLearning/AzureCognitiveServices.puml
+!includeurl AzurePuml/Identity/AzureActiveDirectory.puml
+
+!$ICONURL = "https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v3.0.0/icons"
+!include $ICONURL/common.puml
+!include $ICONURL/font-awesome/tree.puml
+!include $ICONURL/font-awesome-5/pen.puml
+!include $ICONURL/font-awesome-5/file_word.puml
+!include $ICONURL/font-awesome-5/chrome.puml
+!include $ICONURL/font-awesome-6/magnifying_glass.puml
+!include $ICONURL/font-awesome-6/clock.puml
+!include $ICONURL/font-awesome-6/robot.puml
+!include $ICONURL/devicons/onedrive.puml
+!include $ICONURL/devicons/sqllite.puml
+!include $ICONURL/devicons2/json.puml
+!include $ICONURL/devicons2/linkedin.puml
+!include $ICONURL/devicons2/google.puml
+!include $ICONURL/devicons2/azure.puml
+!include $ICONURL/material/email.puml
+
+@enduml
