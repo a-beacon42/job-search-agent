@@ -1,3 +1,4 @@
+from typing import Sequence
 from sqlmodel import Session, select
 from .db_models import JobSearchQuery, JobPosting
 
@@ -33,7 +34,7 @@ class JobPostingRepo:
         self.session.refresh(job_posting)
         return job_posting
 
-    def get_new(self) -> list[JobPosting]:
+    def get_new(self) -> Sequence[JobPosting]:
         # e.g., jobs without summary/status yet
         return self.session.exec(
             select(JobPosting).where(JobPosting.summary == None)

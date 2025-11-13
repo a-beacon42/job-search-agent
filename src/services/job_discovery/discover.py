@@ -50,7 +50,6 @@ class JobDiscoveryService:
                 print(f"Searching {source_name} for '{query.keywords}'...")
 
                 if source_name == "public_scraper":
-                    # Public scraper methods
                     indeed_jobs = source.search_indeed_jobs(
                         query.keywords, query.location, query.max_results // 2
                     )
@@ -62,7 +61,6 @@ class JobDiscoveryService:
                     all_jobs.extend(remote_jobs)
 
                 elif source_name == "serp_api":
-                    # SerpAPI method
                     serp_jobs = source.search_jobs(
                         query.keywords, query.location, query.max_results
                     )
@@ -95,7 +93,6 @@ class JobDiscoveryService:
         return self.search_jobs(query)
 
 
-# Convenience function for direct use
 def find_ai_engineer_jobs(location: str = "United States") -> List[JobPosting]:
     """
     Find AI Engineer jobs without any authentication requirements

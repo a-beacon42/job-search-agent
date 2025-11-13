@@ -7,8 +7,6 @@ from core.repositories import JobSearchQueryRepo, JobPostingRepo
 def main():
     print("Hello from job-search-agent!\n\nkicking off a search...\n")
     """
-    1. find jobs - service
-    2. summarize - graph
     3. send notification - service
     4. listen for selection
     5. write application materials - agent
@@ -25,6 +23,7 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
 
+    # 1. find jobs - service
     # try:  # find new ai engineer jobs
     #     print("🔍 Searching for AI Engineer jobs...")
     #     print("=" * 60)
@@ -52,6 +51,7 @@ def main():
     # except Exception as e:
     #     print(f"Error: {e}")
 
+    # 2. summarize - graph
     try:  # summarize job descriptions
         summarizer = SummaryAgent()
         # get jobs from db -- need id created in last step
