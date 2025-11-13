@@ -7,10 +7,7 @@ from core.repositories import JobSearchQueryRepo, JobPostingRepo
 def main():
     print("Hello from job-search-agent!\n\nkicking off a search...\n")
     """
-    3. send notification - service
-    4. listen for selection
-    5. write application materials - agent
-    6. send notification
+    
     -- interview coach should be separate app with access to db --
         * could this be a tab in the streamlit UI that opens an interactive chat window? 
         * using a speech model for interview practice
@@ -68,6 +65,7 @@ def main():
     except Exception as e:
         print(f"Summarize Jobs Error: {e}")
 
+    # 3. send notification - service
     try:  # send email
         """
         MVP = display summaries & URL to job post
@@ -76,6 +74,10 @@ def main():
         pass
     except Exception as e:
         print(f"...error: {e}")
+
+    # 4. listen for selection
+    # 5. write application materials - agent
+    # 6. send notification
 
 
 if __name__ == "__main__":

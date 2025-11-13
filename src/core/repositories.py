@@ -1,6 +1,7 @@
-from typing import Sequence
+from typing import Sequence, List, Optional
 from sqlmodel import Session, select
-from .db_models import JobSearchQuery, JobPosting
+from sqlalchemy import func, desc
+from .models import JobSearchQuery, JobPosting
 
 
 class JobSearchQueryRepo:
@@ -55,3 +56,43 @@ class JobPostingRepo:
         self.session.commit()
         self.session.refresh(job)
         return job
+
+    def search_jobs(
+        self,
+        query: str = "",
+        location: Optional[str] = None,
+        sort_by: str = "Recently posted",
+    ) -> Sequence[JobPosting]:
+        stmt = select(JobPosting)
+
+        # text search over title, company, description
+        if query:
+            like = f"%{query.lower()}%"
+            stmt = stmt.where(
+                func.lower(JobPosting.title).like(like)
+                | func.lower(JobPosting.company).like(like)
+                | func.lower(JobPosting.description).like(like)
+            )
+
+        if location and location != "All":
+            stmt = stmt.where(JobPosting.location == location)
+
+        if sort_by == "Recently posted":
+            stmt = stmt.order_by(JobPosting.posted_date.desc().nullslast())
+        elif sort_by == "Company A → Z":
+            stmt = stmt.order_by(JobPosting.company.asc(), JobPosting.title.asc())
+        else:
+            stmt = stmt.order_by(JobPosting.id.desc())
+
+        jobs = self.session.exec(stmt).all()
+
+        return jobs
+
+    def get_locations(self) -> List[str]:
+        """Return distinct locations for filter dropdown."""
+        rows = self.session.exec(
+            select(JobPosting.location).distinct().where(JobPosting.location != "")
+        ).all()
+        # rows is a list of one-tuples like [('Remote',), ('NYC',)]
+        locations = sorted({r for r in rows if r is not None})
+        return locations

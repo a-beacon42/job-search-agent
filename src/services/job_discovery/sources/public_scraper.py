@@ -13,7 +13,7 @@ except ImportError:
 
 from typing import List, Dict, Optional
 from urllib.parse import urljoin, quote
-from core.db_models import JobPosting
+from src.core.models import JobPosting
 import time
 
 
@@ -53,7 +53,7 @@ class PublicJobScraper:
 
             # Find job cards (Indeed's structure as of 2024)
             job_cards = soup.find_all(
-                "div", {"class": lambda x: x and "job_seen_beacon" in x}
+                "div", "class": lambda x: x and "job_seen_beacon" in x
             )
 
             for card in job_cards[:max_results]:
