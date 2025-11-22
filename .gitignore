@@ -1,6 +1,7 @@
 .env
 scratch.ipynb
 *.db
+*.log
 
 # Python-generated files
 __pycache__/
@@ -12,3 +13,35 @@ wheels/
 
 # Virtual environments
 .venv
+
+# IDE/Editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.DS_Store
+
+# Jupyter Notebook files
+.ipynb_checkpoints/
+*.ipynb
+
+# Font files (large binary files)
+*.ttf
+*.woff
+*.woff2
+
+# Streamlit cache
+.streamlit/
+
+# Azure/OpenAI keys and credentials
+azure_credentials.json
+openai_key.txt
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+Desktop.ini

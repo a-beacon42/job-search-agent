@@ -1,14 +1,13 @@
-from typing import List
 from sqlmodel import SQLModel, create_engine, Session
 import os
 
-from .models import (
-    JobSearchQuery,
-    JobPosting,
-)
+# Import all models so they're registered with SQLModel
+from .models import JobSearchQuery, JobPosting, JobSummary
 
 # Use absolute path to ensure consistency
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 DATABASE_PATH = os.path.join(PROJECT_ROOT, "job_search.db")
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 

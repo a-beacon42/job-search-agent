@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 import requests
 from typing import List, Dict, Optional
-from src.core.models import JobPosting
+from core.models import JobPosting
 
 load_dotenv()
 

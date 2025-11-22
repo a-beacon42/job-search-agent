@@ -1,50 +1,67 @@
 import streamlit as st
-from core.models import JobPosting
-from utils import truncate
+from core.models import JobPosting, JobSummary
 
 
-def render_job_card(job: JobPosting) -> None:
+def handle_create_app(job_post_id: int):
+    print(
+        f"""
+==================================================
+
+creating resume & cover letter for Job {job_post_id}
+
+==================================================
+"""
+    )
+
+
+def render_job_card(job_post: JobPosting, job_summary: JobSummary):
     with st.container():
-        # Header row: title + basic info
-        header_cols = st.columns([3, 2])
-        with header_cols[0]:
-            st.markdown(f"### {job.title}")
-            st.markdown(f"**{job.company}** · {job.location}")
-        with header_cols[1]:
-            # Tags / meta info
-            tags = []
-            if job.job_type:
-                tags.append(job.job_type)
-            if job.experience_level:
-                tags.append(job.experience_level)
-            if job.source:
-                tags.append(f"Source: {job.source}")
-            if job.salary_range:
-                tags.append(f"Salary: {job.salary_range}")
+        title, apply_bttn = st.columns(spec=[0.75, 0.25])
 
-            if tags:
-                st.markdown(" | ".join(f"`{t}`" for t in tags))
+        title.markdown(f"#### {job_post.title}")
+        apply_bttn.button(
+            "apply",
+            key=job_post.id,
+            help="click here to create a resume & cover letter for this job",
+            on_click=handle_create_app,
+            kwargs={"job_post_id": job_post.id},
+        )
 
-            if job.posted_date:
-                st.caption(f"Posted: {job.posted_date}")
-                #   .strftime('%Y-%m-%d')}")
+    st.markdown(f"**{job_post.company}** · {job_post.location}")
 
-        if job.summary:
-            st.markdown("**About the job**")
-            st.markdown(job.summary)
+    tags = []
+    if job_summary.job_type:
+        tags.append(f"{job_summary.job_type.display_name}")
+    if job_summary.salary_range:
+        (
+            tags.append(f"{job_summary.salary_range}")
+            if job_summary.salary_range != "not listed"
+            else tags.append("$n/a")
+        )
+    if job_summary.experience_level:
+        tags.append(f"{job_summary.experience_level.display_name}")
+    if job_post.source:
 
-        # Actions
-        action_cols = st.columns([1, 2])
-        with action_cols[0]:
-            if st.button("View details", key=f"details_{job.id}"):
-                st.session_state[f"show_{job.id}"] = True
+        tags.append(f"{job_post.source}")
 
-        with action_cols[1]:
-            if job.url:
-                st.link_button("Open original posting", job.url)
+    if tags:
+        st.markdown(" | ".join(f"`{t}`" for t in tags))
 
-        # Full details in an expander
-        with st.expander("Full job description", expanded=False):
-            st.write(job.description)
+    if job_post.posted_date:
+        st.caption(job_post.posted_date)
 
-        st.divider()
+    st.markdown("**standout features**")
+    features = job_summary.standout_features.split("- ")
+    cleaned_features = [f for f in features if len(f) > 0]
+
+    for f in cleaned_features:
+        st.markdown(f":small[• {f}]")
+
+    st.markdown("**qualifications**")
+    quals = job_summary.qualifications.split("- ")
+    cleaned_quals = [q for q in quals if len(q) > 0]
+    for q in cleaned_quals:
+        st.markdown(f":small[• {q}]")
+
+    if job_post.url:
+        st.link_button("View posting", job_post.url)

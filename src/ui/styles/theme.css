@@ -1,0 +1,46 @@
+:root {
+  --radius: 12px;
+}
+
+/* Light mode defaults */
+body,
+.stApp {
+  --bg: #fafafa;
+  --card-bg: #ffffff;
+  --text: #111111;
+  --primary: #4f759b;
+  --secondary: #ff7c1f;
+}
+
+/* Dark mode overrides */
+body[data-theme="dark"],
+.stApp[data-theme="dark"] {
+  --bg: #020617;
+  --card-bg: #020617;
+  --text: #e5e7eb;
+  --primary: #38bdf8;
+  --secondary: #f97316;
+}
+
+/* Custom button */
+.stButton > button {
+  background-color: var(--primary);
+  color: white;
+  border-radius: var(--radius);
+  padding: 0.6rem 1.2rem;
+  border: none;
+  font-weight: 600;
+}
+
+.stButton > button:hover {
+  background-color: var(--secondary);
+}
+
+/* Card component */
+.card {
+  background: #4f759b;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}

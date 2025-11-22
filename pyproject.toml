@@ -11,6 +11,7 @@ dependencies = [
     "fastapi>=0.121.0",
     "httpx>=0.28.1",
     "langchain>=1.0.3",
+    "langchain-ollama>=1.0.0",
     "langchain-openai>=1.0.2",
     "langgraph>=1.0.2",
     "linkedin-scraper>=2.11.5",
@@ -18,6 +19,7 @@ dependencies = [
     "pydantic>=2.12.4",
     "sqlmodel>=0.0.27",
     "streamlit>=1.51.0",
+    "streamlit-extras>=0.7.8",
     "uvicorn>=0.38.0",
     "watchdog>=6.0.0",
 ]

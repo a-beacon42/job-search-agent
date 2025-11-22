@@ -3,8 +3,14 @@ Main job discovery service coordinator
 Manages multiple job sources without authentication dependencies
 """
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+SERP_API_KEY = os.getenv("SERP_API_KEY")
+
 from typing import List
-from src.core.models import JobPosting, JobSearchQuery
+from core.models import JobPosting, JobSearchQuery
 
 
 class JobDiscoveryService:
@@ -19,24 +25,23 @@ class JobDiscoveryService:
     def _initialize_sources(self):
         """Initialize available job sources"""
         try:
-            from .sources.public_scraper import PublicJobScraper
+            from services.job_discovery.sources.public_scraper import PublicJobScraper
 
             self.sources.append(("public_scraper", PublicJobScraper()))
         except ImportError:
-            print("Public scraper not available (missing beautifulsoup4)")
+            print("can't initialize source: PublicJobScraper")
 
-        try:
-            from .sources.serp_api import SerpAPIJobSearch
-            import os
+        # try:
+        #     from services.job_discovery.sources.serp_api import SerpAPIJobSearch
 
-            if os.getenv("SERP_API_KEY"):
-                self.sources.append(("serp_api", SerpAPIJobSearch()))
-            else:
-                print(
-                    "SerpAPI not available (missing SERP_API_KEY environment variable)"
-                )
-        except ImportError:
-            print("SerpAPI not available")
+        #     if SERP_API_KEY:
+        #         self.sources.append(
+        #             ("serp_api", SerpAPIJobSearch(api_key=SERP_API_KEY))
+        #         )
+        #     else:
+        #         print("can't initialize source: SerpAPIJobSearch\n**check API key")
+        # except ImportError:
+        #     print("SerpAPI not available")
 
     def search_jobs(self, query: JobSearchQuery) -> List[JobPosting]:
         """
@@ -71,6 +76,7 @@ class JobDiscoveryService:
                 continue
 
         # Remove duplicates based on title + company
+        # todo - move this up to compare to jobs in DB
         seen = set()
         unique_jobs = []
         for job in all_jobs:
