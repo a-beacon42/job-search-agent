@@ -49,12 +49,12 @@ class PublicJobScraper:
             response = self.session.get(base_url, params=params)
             response.raise_for_status()
 
-            soup = BeautifulSoup(response.content, "html.parser")
+            soup = BeautifulSoup(response.content, "html.parser")  # type: ignore[return-value]
 
             # Find job cards (Indeed's structure as of 2024)
             job_cards = soup.find_all(
-                "div", {"class": lambda x: x and "job_seen_beacon" in x}
-            )
+                "div", {"class": lambda x: x and "job_seen_beacon" in x}  # type: ignore[return-value]
+            )  # type: ignore[return-value]
 
             for card in job_cards[:max_results]:
                 try:
