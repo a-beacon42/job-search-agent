@@ -1,17 +1,24 @@
 import streamlit as st
 from core.models import JobPosting, JobSummary
+from services.apply.apply import create_job_app
 
 
-def handle_create_app(job_post_id: int):
+def handle_create_app(job_post: str):
+
+    job_app = create_job_app(job_post, applicant_info)
     print(
         f"""
 ==================================================
 
-creating resume & cover letter for Job {job_post_id}
+creating resume & cover letter for Job {job_post}
 
 ==================================================
 """
     )
+
+
+# todo -- fix applicant_info
+applicant_info = "Experienced software developer with a strong background in Python and web development."
 
 
 def render_job_card(job_post: JobPosting, job_summary: JobSummary):
@@ -24,7 +31,7 @@ def render_job_card(job_post: JobPosting, job_summary: JobSummary):
             key=job_post.id,
             help="click here to create a resume & cover letter for this job",
             on_click=handle_create_app,
-            kwargs={"job_post_id": job_post.id},
+            kwargs={"job_post": job_post.description, "applicant_info": applicant_info},
         )
 
     st.markdown(f"**{job_post.company}** · {job_post.location}")

@@ -16,10 +16,14 @@ load_css()
 
 
 def main():
-
+    st.write(st.session_state)
     pages = [
+        st.Page("./pages/login_register.py", title="login", icon=":material/login:"),
         st.Page("./pages/home.py", title="home", icon=":material/home:"),
         st.Page("./pages/new_jobs.py", title="new jobs", icon=":material/work_alert:"),
+        st.Page(
+            "./pages/single_job.py", title="single job", icon=":material/fact_check:"
+        ),
     ]
     page = st.navigation(pages)
     page.run()

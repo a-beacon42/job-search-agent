@@ -1,7 +1,15 @@
 from typing import Sequence, List, Optional
 from sqlmodel import Session, select
 from sqlalchemy import func, desc
-from .models import JobSearchQuery, JobPosting, JobSummary
+from .models import (
+    JobSearchQuery,
+    JobPosting,
+    JobSummary,
+    ApplicantInfo,
+    ApplicationMaterials,
+    User,
+    CompanyInfo,
+)
 
 
 class JobSearchQueryRepo:
@@ -24,10 +32,21 @@ class JobPostingRepo:
     def __init__(self, session: Session):
         self.session = session
 
+    def get_all(self) -> Sequence[JobPosting]:
+        return self.session.exec(select(JobPosting)).all()
+
     def get_by_url(self, url: str) -> JobPosting | None:
         return self.session.exec(
             select(JobPosting).where(JobPosting.url == url)
         ).first()
+
+    def get_by_id(self, id: int) -> JobPosting | None:
+        return self.session.exec(select(JobPosting).where(JobPosting.id == id)).first()
+
+    def get_by_user_id(self, user_id: int) -> List[JobPosting] | None:
+        statement = select(JobPosting).where(user_id == user_id)
+        job_posts = self.session.exec(statement).all()
+        return job_posts  # type: ignore[return-value]
 
     def add(self, job_posting: JobPosting) -> JobPosting:
         self.session.add(job_posting)
@@ -90,7 +109,7 @@ class JobPostingRepo:
 
         return jobs
 
-    def get_locations(self) -> List[str]:
+    def get_locations(self) -> Sequence[str]:
         """Return distinct locations for filter dropdown."""
         rows = self.session.exec(
             select(JobPosting.location).distinct().where(JobPosting.location != "")
@@ -133,3 +152,124 @@ class JobSummaryRepo:
         self.session.commit()
         self.session.refresh(summary)
         return summary
+
+
+class ApplicantInfoRepo:
+    def __init__(self, session) -> None:
+        self.session = session
+
+    def get_info_by_user_id(self, user_id: int) -> Sequence[ApplicantInfo]:
+        statement = select(ApplicantInfo).where(user_id == user_id)
+        return self.session.exec(statement)
+
+    def add(self, app_info: ApplicantInfo) -> ApplicantInfo:
+        self.session.add(app_info)
+        self.session.commit()
+        self.session.refresh(app_info)
+        return app_info
+
+    def update(self, app_info_id: int, **fields) -> ApplicantInfo:
+        statement = select(ApplicantInfo).where(ApplicantInfo.id == app_info_id)
+        app_info = self.session.exec(statement).one()
+        if app_info is None:
+            raise ValueError(f"ApplicantInfo (id: {app_info_id}) not found")
+
+        for key, value in fields.items():
+            if hasattr(app_info, key):
+                setattr(app_info, key, value)
+
+        self.session.add(app_info)
+        self.session.commit()
+        self.session.refresh(app_info)
+        return app_info
+
+    def delete(self, app_info_id: int) -> None:
+        statement = self.session.select(ApplicantInfo).where(id=app_info_id)
+        app_info = self.session.exec(statement).one()
+        self.session.delete(app_info)
+        self.session.commit()
+
+
+class ApplicationMaterialsRepo:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_all(self) -> Sequence[ApplicationMaterials]:
+        return self.session.exec(select(ApplicationMaterials)).all()
+
+    def get_by_id(self, id: int) -> ApplicationMaterials | None:
+        return self.session.exec(
+            select(ApplicationMaterials).where(ApplicationMaterials.id == id)
+        ).first()
+
+    def get_by_job_post_id(self, job_post_id: int) -> ApplicationMaterials | None:
+        return self.session.exec(
+            select(ApplicationMaterials).where(
+                ApplicationMaterials.job_posting_id == job_post_id
+            )
+        ).first()
+
+    def add(self, app_materials: ApplicationMaterials) -> ApplicationMaterials:
+        self.session.add(app_materials)
+        self.session.commit()
+        self.session.refresh(app_materials)
+        return app_materials
+
+
+class UserRepo:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def register_user(self, new_user: User) -> User:
+        self.session.add(new_user)
+        self.session.commit()
+        self.session.refresh(new_user)
+        return new_user
+
+    def get_by_id(self, id: int) -> User | None:
+        statement = select(User).where(User.id == id)
+        results = self.session.exec(statement=statement)
+        user = results.first()
+        return user
+
+    def get_user_by_email(self, email: str) -> User | None:
+        statement = select(User).where(User.email == email)
+        results = self.session.exec(statement=statement)
+        user = results.first()
+        return user
+
+    def update_user(self, user_id: int, **fields) -> User:
+        statement = select(User).where(User.id == user_id)
+        results = self.session.exec(statement)
+        user = results.one()
+        if user is None:
+            raise ValueError(f"no user (id: {user_id}) found")
+        for k, v in fields.items():
+            if hasattr(user, k):
+                setattr(user, k, v)
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        return user
+
+
+class CompanyInfoRepo:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_by_id(self, id: int) -> CompanyInfo | None:
+        return self.session.exec(
+            select(CompanyInfo).where(CompanyInfo.id == id)
+        ).first()
+
+    def get_by_name(self, name: str = "") -> CompanyInfo | None:
+        like_pattern = f"%{name.lower()}%"
+        return self.session.exec(
+            select(CompanyInfo).where(func.lower(CompanyInfo.name).like(like_pattern))
+        ).first()
+
+    def add(self, company_info: CompanyInfo) -> CompanyInfo:
+        self.session.add(company_info)
+        self.session.commit()
+        self.session.refresh(company_info)
+        return company_info

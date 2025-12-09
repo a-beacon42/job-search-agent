@@ -1,8 +1,13 @@
 import logging
 from services.job_discovery.discover import find_ai_engineer_jobs
 from services.job_summary.summarize import SummaryAgent
+from services.company_review.review import ReviewAgent
 from core.db import get_session
-from core.repositories import JobSearchQueryRepo, JobPostingRepo, JobSummaryRepo
+from core.repositories import (
+    JobPostingRepo,
+    JobSummaryRepo,
+    CompanyInfoRepo,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +31,7 @@ def main():
         logger.info(f"Database connection successful: {db_session}")
         job_posting_repo = JobPostingRepo(db_session)
         job_summary_repo = JobSummaryRepo(db_session)
+        company_info_repo = CompanyInfoRepo(db_session)
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
 
@@ -53,6 +59,21 @@ def main():
     try:  # add jobs to db
         logger.info("=" * 80)
         for job in jobs:
+            logger.info(f"Reviewing company info for '{job.company}'...")
+            company_info = company_info_repo.get_by_name(job.company)
+
+            if not company_info:
+                try:
+                    logger.info(
+                        f"No existing company info found for '{job.company}'. Generating new review..."
+                    )
+                    reviewer = ReviewAgent()
+                    company_info = reviewer.review_company(job.company)
+                    company_info_repo.add(company_info)
+                except Exception as e:
+                    logger.error(f"Failed to initialize ReviewAgent: {e}")
+                    continue
+            job.company_info_id = company_info.id if company_info else None
             logger.info(f"Writing job '{job.title}' to database...")
             job_posting_repo.add(job)
         logger.info(f"Successfully wrote {len(jobs)} jobs to database")

@@ -31,17 +31,17 @@ class JobDiscoveryService:
         except ImportError:
             print("can't initialize source: PublicJobScraper")
 
-        # try:
-        #     from services.job_discovery.sources.serp_api import SerpAPIJobSearch
+        try:
+            from services.job_discovery.sources.serp_api import SerpAPIJobSearch
 
-        #     if SERP_API_KEY:
-        #         self.sources.append(
-        #             ("serp_api", SerpAPIJobSearch(api_key=SERP_API_KEY))
-        #         )
-        #     else:
-        #         print("can't initialize source: SerpAPIJobSearch\n**check API key")
-        # except ImportError:
-        #     print("SerpAPI not available")
+            if SERP_API_KEY:
+                self.sources.append(
+                    ("serp_api", SerpAPIJobSearch(api_key=SERP_API_KEY))
+                )
+            else:
+                print("can't initialize source: SerpAPIJobSearch\n**check API key")
+        except ImportError:
+            print("SerpAPI not available")
 
     def search_jobs(self, query: JobSearchQuery) -> List[JobPosting]:
         """
