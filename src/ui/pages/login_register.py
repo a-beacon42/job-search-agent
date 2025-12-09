@@ -57,20 +57,23 @@ with tabs[1]:
             st.error("Please agree to the Terms of Service.")
         else:
             try:
-                user_req = UserRegistrationRequest(
+                new_user_req = UserRegistrationRequest(
                     email=reg_email,
                     password=reg_password,
                     first_name=f_name,
                     last_name=l_name,
                 )
                 try:
-                    result = reg_service.register_user(user_req)
+                    result = reg_service.register_user(new_user_req)
                     if not result.success:
                         st.error(f"Registration failed: {result.message}")
                     else:
                         st.success(
                             f"Account created for {reg_email}. You can now log in."
                         )
+                        st.session_state["user_id"] = result.user_id
+                        st.query_params["user_id"] = str(result.user_id)
+                        st.switch_page(page="pages/home.py")
                 except Exception as e:
                     st.error(f"Registration failed: {str(e)}")
                 finally:
