@@ -19,7 +19,11 @@ job_post = jobs_repo.get_by_id(4)
 job_summary = summary_repo.get_by_job_post_id(4)
 company_info = company_info_repo.get_by_id(4)
 app_materials = app_materials_repo.get_by_job_post_id(4)
-# company_info = company_info_repo.get_by_id(job_post.company_info_id) if job_post and job_post.company_info_id else None
+company_info = (
+    company_info_repo.get_by_id(job_post.company_info_id)
+    if job_post and job_post.company_info_id
+    else None
+)
 
 
 with st.sidebar:
@@ -29,7 +33,7 @@ with st.sidebar:
     locations = jobs_repo.get_locations()
     location_filter = st.selectbox(
         "Location",
-        options=["All"] + locations,
+        options=["All"] + locations,  # type: ignore[arg-type]
         index=0,
     )
 

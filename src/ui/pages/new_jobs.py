@@ -20,7 +20,7 @@ with st.sidebar:
     locations = jobs_repo.get_locations()
     location_filter = st.selectbox(
         "Location",
-        options=["All"] + locations,
+        options=["All", locations],
         index=0,
     )
 
@@ -29,7 +29,7 @@ with st.sidebar:
         options=["Recently posted", "Company A → Z"],
     )
 
-jobs = jobs_repo.search_jobs(query=query, location=location_filter, sort_by=sort_by)
+jobs = jobs_repo.search_jobs(query=query, location=location_filter, sort_by=sort_by)  # type: ignore[return-value]
 
 st.subheader(f"{len(jobs)} job(s) found")
 

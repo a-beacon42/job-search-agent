@@ -16,7 +16,7 @@ load_css()
 
 
 def main():
-    st.write(st.session_state)
+    # st.write(st.session_state)
     pages = [
         st.Page("./pages/login_register.py", title="login", icon=":material/login:"),
         st.Page("./pages/home.py", title="home", icon=":material/home:"),

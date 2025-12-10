@@ -15,6 +15,7 @@ login_service = LoginService(user_repository=user_repo)
 st.set_page_config(page_title="Login", page_icon="🔐", layout="centered")
 
 tabs = st.tabs(["Login", "Register"])
+# todo - convert both to st.form
 
 with tabs[0]:
     st.header("Login")
