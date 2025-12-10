@@ -1,5 +1,7 @@
+import time
 import streamlit as st
 from pathlib import Path
+from core.models import ApplicantInfoType, ApplicantInfo
 from core.repositories import UserRepo, JobPostingRepo, ApplicantInfoRepo
 from core.db import get_session
 
@@ -25,19 +27,75 @@ try:
         st.switch_page(page="/pages/login_register.py")
 
     if user:
-        st.title(f"welcome, {user.first_name}")
+        st.title(f":green[Welcome, {user.first_name}]")
 
-        home_tabs = [
-            "App Status",
-            "Applicant Info",
-        ]
+        app_status, applicant_info = st.tabs(
+            [
+                "App Status",
+                "Applicant Info",
+            ]
+        )
 
-        col_names = ["New Jobs", "Ready to Apply", "Applied"]
-        cols = st.columns(len(col_names))
+        with app_status:
+            col_names = ["New Jobs", "Ready to Apply", "Applied"]
+            cols = st.columns(len(col_names))
 
-        for col, name in zip(cols, col_names):
-            with col:
-                st.metric(label=name, value="42")  # placeholder value
+            for col, name in zip(cols, col_names):
+                with col:
+                    st.metric(label=name, value="42")  # placeholder value
+
+        with applicant_info:
+            st.markdown("##### add something new:")
+            with st.form(
+                key="add_app_info_form",
+                clear_on_submit=True,
+                enter_to_submit=True,
+                border=True,
+                width="stretch",
+                height="content",
+            ):
+                info, info_type = st.columns([3, 1])
+                with info:
+                    st.text_area(
+                        label="Share something about your background",
+                        placeholder="e.g. 5 years experience in software engineering...",
+                        key="app_info_content",
+                    )
+                with info_type:
+                    option = st.selectbox(
+                        "What kind of info are you adding?",
+                        [info_type.display_name for info_type in ApplicantInfoType],
+                    )
+                    submit_btn = st.form_submit_button("Add Info")
+                if submit_btn:
+                    # todo -- add validation, error handling
+                    selected_type = ApplicantInfoType(
+                        option.replace(" ", "_").upper()
+                    )  # todo -- this is ugly; learn more about enums
+                    new_app_info = appl_info_repo.add(
+                        ApplicantInfo(
+                            info_type=selected_type,
+                            content=st.session_state.get("app_info_content", ""),
+                            user_id=user.id,
+                        )
+                    )
+                    user_app_info.append(new_app_info)  # type: ignore[return-value]
+                    success_message_container = st.empty()
+                    success_message_container.success(
+                        "Applicant info added successfully!"
+                    )
+                    time.sleep(3)  # Message will disappear after 3 seconds
+                    success_message_container.empty()
+
+            st.subheader("about you:")
+            if len(user_app_info) <= 0:
+                st.info("No applicant info found. Add some using the form above!")
+            else:
+                for info in user_app_info or []:
+                    # todo -- group by type, make collapsible sections
+                    st.markdown(f"**{info.info_type.display_name}**")
+                    st.write(info.content)
+                    st.markdown("---")
 
     else:
         st.write(f"no logged in user found")
@@ -46,17 +104,17 @@ except Exception as e:
     st.error(f"no user: {str(e)}")
     st.switch_page(page="/pages/login_register.py")
 
-st.markdown("under construction -- future home will look something like:")
-st.markdown(
-    """
-- simple dashboard  
-- **top row of quick check metrics**: 
-    * number of new jobs to review, [clicking takes to new jobs] 
-    * number of jobs read to apply to, 
-    * breakdown of status of applied to jobs (applied, 1st round, late stage, rejected, stale (need to define 'stale'))  
-- **table to show more detail**:  
-    * 1 row per job post  
-    * filters for status  
-    * clicking on single job will route to job detail page  
-"""
-)
+# st.markdown("under construction -- future home will look something like:")
+# st.markdown(
+#     """
+# - simple dashboard
+# - **top row of quick check metrics**:
+#     * number of new jobs to review, [clicking takes to new jobs]
+#     * number of jobs read to apply to,
+#     * breakdown of status of applied to jobs (applied, 1st round, late stage, rejected, stale (need to define 'stale'))
+# - **table to show more detail**:
+#     * 1 row per job post
+#     * filters for status
+#     * clicking on single job will route to job detail page
+# """
+# )

@@ -160,7 +160,8 @@ class ApplicantInfoRepo:
 
     def get_info_by_user_id(self, user_id: int) -> Sequence[ApplicantInfo]:
         statement = select(ApplicantInfo).where(user_id == user_id)
-        return self.session.exec(statement)
+        results = self.session.exec(statement).all()
+        return results
 
     def add(self, app_info: ApplicantInfo) -> ApplicantInfo:
         self.session.add(app_info)
