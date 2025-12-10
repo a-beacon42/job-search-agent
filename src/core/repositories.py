@@ -159,7 +159,7 @@ class ApplicantInfoRepo:
         self.session = session
 
     def get_info_by_user_id(self, user_id: int) -> Sequence[ApplicantInfo]:
-        statement = select(ApplicantInfo).where(user_id == user_id)
+        statement = select(ApplicantInfo).where(ApplicantInfo.user_id == user_id)
         results = self.session.exec(statement).all()
         return results
 
@@ -185,7 +185,7 @@ class ApplicantInfoRepo:
         return app_info
 
     def delete(self, app_info_id: int) -> None:
-        statement = self.session.select(ApplicantInfo).where(id=app_info_id)
+        statement = select(ApplicantInfo).where(ApplicantInfo.id == app_info_id)
         app_info = self.session.exec(statement).one()
         self.session.delete(app_info)
         self.session.commit()

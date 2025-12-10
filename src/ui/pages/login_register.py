@@ -69,15 +69,10 @@ with tabs[1]:
                     if not result.success:
                         st.error(f"Registration failed: {result.message}")
                     else:
-                        st.success(
-                            f"Account created for {reg_email}. You can now log in."
-                        )
                         st.session_state["user_id"] = result.user_id
                         st.query_params["user_id"] = str(result.user_id)
                         st.switch_page(page="pages/home.py")
                 except Exception as e:
                     st.error(f"Registration failed: {str(e)}")
-                finally:
-                    db.close()
             except Exception as e:
                 st.error(f"Error creating registration request: {str(e)}")
