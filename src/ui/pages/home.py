@@ -1,6 +1,7 @@
 import time
+from typing import cast
 import streamlit as st
-from pathlib import Path
+from core.utils import group_by, disappearing_message
 from core.models import ApplicantInfoType, ApplicantInfo
 from core.repositories import UserRepo, JobPostingRepo, ApplicantInfoRepo
 from core.db import get_session
@@ -79,34 +80,40 @@ try:
                             user_id=user.id,
                         )
                     )
-                    user_app_info.append(new_app_info)  # type: ignore[return-value]
-                    success_message_container = st.empty()
-                    success_message_container.success(
-                        "Applicant info added successfully!"
-                    )
-                    time.sleep(3)  # Message will disappear after 3 seconds
-                    success_message_container.empty()
+                    disappearing_message(
+                        st,
+                        message="Applicant info added successfully!",
+                        msg_type=cast(type[str], "success"),
+                        duration=2,
+                    )  # type: ignore[call-arg]
 
             st.subheader("about you:")
             if len(user_app_info) <= 0:
                 st.info("No applicant info found. Add some using the form above!")
             else:
-                for info in user_app_info or []:
-                    # todo -- group by type, make collapsible sections
-                    st.markdown(f"**{info.info_type.display_name}**")
-                    st.write(info.content)
-                    st.markdown("---")
+                grouped_app_info = group_by(user_app_info, "info_type")
+                for type, infos in grouped_app_info.items():
+                    st.markdown(f"##### {type.display_name}")
+                    for info in infos:
+                        st.markdown(f"* {info.content}")
+                # for info in user_app_info or []:
+                #     # todo -- group by type, make collapsible sections
+                #     st.markdown(f"**{info.info_type.display_name}**")
+                #     st.write(info.content)
+                #     st.markdown("---")
 
     else:
         st.write(f"no logged in user found")
 
 except Exception as e:
-    st.error(f"no user: {str(e)}")
-    st.switch_page(page="/pages/login_register.py")
+    st.error(f"unknown error: {str(e)}")
+    disappearing_message(
+        st=st,
+        message="Unexpected error occurred. Please log in again.",
+        msg_type=cast(type[str], "error"),  # type: ignore[call-arg]
+        duration=5,
+    )
 
-# st.markdown("under construction -- future home will look something like:")
-# st.markdown(
-#     """
 # - simple dashboard
 # - **top row of quick check metrics**:
 #     * number of new jobs to review, [clicking takes to new jobs]
