@@ -36,7 +36,7 @@ def group_by(all_items: Sequence, group_by: str) -> Any:
     return dict(grouped)
 
 
-def disappearing_message(st, message: str, msg_type=str, duration: int = 3):
+def disappearing_message(st, message: str, msg_type: str, duration: int = 3):
     """Display a message that disappears after a certain duration"""
     try:
         if msg_type == "error":

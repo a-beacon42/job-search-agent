@@ -1,5 +1,7 @@
 from core.llm import make_llm
 from core.models import ApplicationMaterials
+from core.db import get_session
+from core.repositories import ApplicantInfoRepo
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from typing import Dict
 
@@ -40,12 +42,12 @@ class AppAgent:
             print(f"AppAgent error: {e}")
 
     def write_cover_letter(
-        self, job_description: str | None = None, applicant_info: str | None = None
+        self, job_desc: str | None = None, applicant_info: str | None = None
     ) -> AIMessage:
         msg = f"""
 use {COVER_LETTER_INSTRUCTIONS} to write a cover letter for the following job & applicant info:            
 JOB DESCRIPTION:
-{job_description}
+{job_desc}
 
 APPLICANT_INFO:
 {applicant_info}
@@ -59,12 +61,12 @@ APPLICANT_INFO:
         return cover_letter  # type: ignore[return-value]
 
     def write_resume(
-        self, job_description: str | None = None, applicant_info: str | None = None
+        self, job_desc: str | None = None, applicant_info: str | None = None
     ) -> AIMessage:
         msg = f"""
 use {RESUME_INSTRUCTIONS} to write a resume for the following job & applicant info:
 JOB DESCRIPTION:
-{job_description}
+{job_desc}
 
 
 APPLICANT_INFO:
@@ -75,15 +77,21 @@ APPLICANT_INFO:
         return resume  # type: ignore[return-value]
 
 
-def create_job_app(
-    job_description: str, applicant_info: str = ""
-) -> ApplicationMaterials:
+def create_job_app(job_description: str, user_id: int) -> ApplicationMaterials:
+    try:
+        db = get_session()
+        appl_info_repo = ApplicantInfoRepo(db)
+        user_app_info_records = appl_info_repo.get_info_by_user_id(user_id)
+        applicant_info = "\n".join([record.content for record in user_app_info_records])
+    except Exception as e:
+        raise ValueError(f"Error retrieving applicant info: {e}")
+
     app_agent = AppAgent()
     resume_content = app_agent.write_resume(
-        job_description=job_description, applicant_info=applicant_info
+        job_desc=job_description, applicant_info=applicant_info
     ).content
     cover_letter_content = app_agent.write_cover_letter(
-        job_description=job_description, applicant_info=applicant_info
+        job_desc=job_description, applicant_info=applicant_info
     ).content
 
     resume = (
@@ -94,5 +102,8 @@ def create_job_app(
         if not isinstance(cover_letter_content, str)
         else cover_letter_content
     )
-
-    return ApplicationMaterials(resume=resume, cover_letter=cover_letter)
+    app_materials = ApplicationMaterials(resume=resume, cover_letter=cover_letter)
+    db.add(app_materials)
+    db.commit()
+    db.refresh(app_materials)
+    return app_materials

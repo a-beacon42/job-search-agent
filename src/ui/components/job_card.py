@@ -1,20 +1,32 @@
 import streamlit as st
 from core.models import JobPosting, JobSummary
+from core.utils import disappearing_message
 from services.apply.apply import create_job_app
 
 
-def handle_create_app(job_post: str):
-
-    job_app = create_job_app(job_post, applicant_info)
-    print(
-        f"""
-==================================================
-
-creating resume & cover letter for Job {job_post}
-
-==================================================
-"""
-    )
+def handle_create_app(job_post: str) -> None:
+    # todo -- make async
+    try:
+        disappearing_message(
+            st=st,
+            message="Creating application materials -- we'll let you know when they're ready!",
+            msg_type="info",
+            duration=2,
+        )
+        user_id = st.session_state.get("user_id")
+        if not user_id:
+            raise ValueError("No logged in user found.")
+        if isinstance(user_id, list):
+            user_id = user_id[0]
+        create_job_app(job_post, user_id=int(user_id))
+        disappearing_message(
+            st=st,
+            message="Application materials created successfully!",
+            msg_type="success",
+            duration=2,
+        )
+    except Exception as e:
+        st.error(f"Error creating application materials: {str(e)}")
 
 
 # todo -- fix applicant_info
@@ -31,7 +43,7 @@ def render_job_card(job_post: JobPosting, job_summary: JobSummary):
             key=job_post.id,
             help="click here to create a resume & cover letter for this job",
             on_click=handle_create_app,
-            kwargs={"job_post": job_post.description, "applicant_info": applicant_info},
+            kwargs={"job_post": job_post.description},
         )
 
     st.markdown(f"**{job_post.company}** · {job_post.location}")

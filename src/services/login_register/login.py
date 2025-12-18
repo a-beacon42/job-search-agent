@@ -1,7 +1,5 @@
 import hashlib
-
 from core.models import User
-
 import streamlit as st
 
 

@@ -3,6 +3,7 @@ from core.db import get_session
 from core.repositories import JobPostingRepo, JobSummaryRepo
 from ui.components.job_card import render_job_card
 
+# todo - add selector for job cards & bulk apply action (make apply async first)
 NUM_COLS = 3
 
 

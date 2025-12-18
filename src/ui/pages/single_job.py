@@ -1,19 +1,23 @@
 import streamlit as st
 from pathlib import Path
-from core.models import JobPosting, JobSummary
+from core.models import JobPosting, JobSummary, InterviewNotes, JobStatus
 from core.repositories import (
     JobPostingRepo,
     JobSummaryRepo,
     CompanyInfoRepo,
     ApplicationMaterialsRepo,
+    InterviewNotesRepo,
 )
 from core.db import get_session
+from core.utils import disappearing_message
+from components.editable_interview_notes import render_editable_interview_notes
 
 db_session = get_session()
 jobs_repo = JobPostingRepo(db_session)
 summary_repo = JobSummaryRepo(db_session)
 company_info_repo = CompanyInfoRepo(db_session)
 app_materials_repo = ApplicationMaterialsRepo(db_session)
+interview_notes_repo = InterviewNotesRepo(db_session)
 
 job_post = jobs_repo.get_by_id(4)
 job_summary = summary_repo.get_by_job_post_id(4)
@@ -24,6 +28,7 @@ company_info = (
     if job_post and job_post.company_info_id
     else None
 )
+past_interview_notes = interview_notes_repo.get_by_job_post_id(4)
 
 
 with st.sidebar:
@@ -46,7 +51,41 @@ header_cols = st.columns([3, 1], vertical_alignment="center")
 with header_cols[0]:
     st.title(f":green[{job_post.title if job_post else '<Job Title>'}]")
 with header_cols[1]:
-    st.markdown("`status: new`")
+    with st.form(
+        key="update_status_form",
+        clear_on_submit=False,
+        enter_to_submit=True,
+    ):
+        current_status_index = 0
+        if job_post and job_post.status:
+            status_options = [status_option.display_name for status_option in JobStatus]
+            try:
+                current_status_index = status_options.index(
+                    job_post.status.display_name
+                )
+            except ValueError:
+                current_status_index = 0
+        job_status = st.selectbox(
+            label="status",
+            options=status_options,
+            index=current_status_index,
+        )
+        submit_btn = st.form_submit_button("update status")
+        if submit_btn:
+            try:
+                new_status = JobStatus(job_status.replace(" ", "_").upper())
+                new_job_status = jobs_repo.update(job_id=job_post.id, status=new_status)  # type: ignore[call-arg]
+                disappearing_message(
+                    st,
+                    message="Status updated.",
+                    msg_type="success",
+                    duration=1,
+                )
+            except Exception as e:
+                disappearing_message(
+                    st, message="Error updating status.", msg_type="error", duration=3
+                )
+
 
 company_name, location, salary_range, posted_date = st.columns(
     4, vertical_alignment="bottom"
@@ -123,6 +162,10 @@ with company_summary:
         st.markdown(f"{company_info.potential_concerns}")
 
 with application:
+    # todo - add pdf download button
+    # todo - make content editable + auto-save
+    # todo - implement version history
+    # todo - implement tailoring chat modal
     st.header("resume")
     st.markdown(f"{app_materials.resume if app_materials else '<Resume Content>'}")
     st.header("cover letter")
@@ -131,26 +174,57 @@ with application:
     )
 
 with interviewing:
-    st.markdown(
-        """
-resume & cover letter  
-* download button
-* editable
-* ?auto-save
-* version history
-* chat modal for tailoring to job description
-                """
-    )
     interview_notes, prep_materials, application_materials = st.tabs(
         ["Interview Notes", "Prep Materials", "Application Materials"]
     )
     with interview_notes:
-        st.write("future -- interview notes, questions asked, etc.")
+        with st.form(
+            key="interview_notes_form",
+            clear_on_submit=True,
+            enter_to_submit=True,
+            border=True,
+            width="stretch",
+            height="content",
+        ):
+            st.text_input(
+                label="Interview Notes Title (optional)",
+                placeholder="e.g. Phone Screen with Jane Doe - Aug 15, 2023",
+                key="interview_notes_title",
+            )
+            st.text_area(
+                label="Add your interview notes here (markdown okay)...",
+                placeholder="e.g. questions asked, your answers, feedback received, etc.",
+                key="interview_notes_content",
+            )
+            submit_btn = st.form_submit_button("Save Notes")
+            if submit_btn:
+                # todo -- save notes to db
+                interview_notes_repo.add(
+                    InterviewNotes(
+                        title=st.session_state.get("interview_notes_title", ""),
+                        content=st.session_state.get("interview_notes_content", ""),
+                        job_posting_id=job_post.id if job_post else None,
+                    )
+                )
+                st.rerun()
+                disappearing_message(
+                    st,
+                    message="Interview notes saved successfully!",
+                    msg_type="success",
+                    duration=2,
+                )
+        st.markdown("#### Past interviews:")
+        if not interview_notes:
+            st.info("No interview notes found. Add some using the form above!")
+        else:
+            for notes in past_interview_notes:
+                render_editable_interview_notes(interview_notes=notes)
     with prep_materials:
         st.write(
             "future -- interview prep materials, e.g. coding challenges, behavioral questions, etc."
         )
     with application_materials:
+        # ? how to link to version history once it's implemented? need a mechanism to select from version history when changing status to 'applied'
         st.header("Resume")
         st.markdown(f"{app_materials.resume if app_materials else '<Resume Content>'}")
         st.header("Cover Letter")

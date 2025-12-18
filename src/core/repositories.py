@@ -9,6 +9,7 @@ from .models import (
     ApplicationMaterials,
     User,
     CompanyInfo,
+    InterviewNotes,
 )
 
 
@@ -55,12 +56,11 @@ class JobPostingRepo:
         return job_posting
 
     def get_new(self) -> Sequence[JobPosting]:
-        # e.g., jobs without summary/status yet
         return self.session.exec(
-            select(JobPosting).where(JobPosting.job_summary_id == None)
+            select(JobPosting).where(JobPosting.status == "NEW")
         ).all()
 
-    def update_job(self, job_id: int, **fields) -> JobPosting:
+    def update(self, job_id: int, **fields) -> JobPosting:
         statement = select(JobPosting).where(JobPosting.id == job_id)
         results = self.session.exec(statement)
         job = results.one()
@@ -158,6 +158,11 @@ class ApplicantInfoRepo:
     def __init__(self, session) -> None:
         self.session = session
 
+    def get_by_id(self, id: int) -> ApplicantInfo | None:
+        return self.session.exec(
+            select(ApplicantInfo).where(ApplicantInfo.id == id)
+        ).first()
+
     def get_info_by_user_id(self, user_id: int) -> Sequence[ApplicantInfo]:
         statement = select(ApplicantInfo).where(ApplicantInfo.user_id == user_id)
         results = self.session.exec(statement).all()
@@ -178,6 +183,7 @@ class ApplicantInfoRepo:
         for key, value in fields.items():
             if hasattr(app_info, key):
                 setattr(app_info, key, value)
+            setattr(app_info, "updated_at", func.now())
 
         self.session.add(app_info)
         self.session.commit()
@@ -274,3 +280,48 @@ class CompanyInfoRepo:
         self.session.commit()
         self.session.refresh(company_info)
         return company_info
+
+
+class InterviewNotesRepo:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_by_id(self, id: int) -> InterviewNotes | None:
+        return self.session.exec(
+            select(InterviewNotes).where(InterviewNotes.id == id)
+        ).first()
+
+    def get_by_job_post_id(self, job_post_id: int) -> Sequence[InterviewNotes]:
+        statement = select(InterviewNotes).where(
+            InterviewNotes.job_posting_id == job_post_id
+        )
+        results = self.session.exec(statement).all()
+        return results
+
+    def add(self, interview_notes: InterviewNotes) -> InterviewNotes:
+        self.session.add(interview_notes)
+        self.session.commit()
+        self.session.refresh(interview_notes)
+        return interview_notes
+
+    def update(self, notes_id: int, **fields) -> InterviewNotes:
+        statement = select(InterviewNotes).where(InterviewNotes.id == notes_id)
+        notes = self.session.exec(statement).one()
+        if notes is None:
+            raise ValueError(f"InterviewNotes (id: {notes_id}) not found")
+
+        for key, value in fields.items():
+            if hasattr(notes, key):
+                setattr(notes, key, value)
+            setattr(notes, "updated_at", func.now())
+
+        self.session.add(notes)
+        self.session.commit()
+        self.session.refresh(notes)
+        return notes
+
+    def delete(self, notes_id: int) -> None:
+        statement = select(InterviewNotes).where(InterviewNotes.id == notes_id)
+        notes = self.session.exec(statement).one()
+        self.session.delete(notes)
+        self.session.commit()

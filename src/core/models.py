@@ -3,6 +3,7 @@ from typing import Optional
 from enum import Enum
 
 from sqlmodel import SQLModel, Field
+from sqlalchemy import func
 
 
 class JobSearchQuery(SQLModel, table=True):
@@ -17,7 +18,25 @@ class JobSearchQuery(SQLModel, table=True):
     remote_ok: bool = True
     max_results: int = 20
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default=func.now())
+
+
+class JobStatus(str, Enum):
+    NEW = "NEW"
+    APPLIED = "APPLIED"
+    INTERVIEWING = "INTERVIEWING"
+    REJECTED = "REJECTED"
+    CLOSED = "CLOSED"
+
+    @property
+    def display_name(self) -> str:
+        return {
+            "NEW": "new",
+            "APPLIED": "applied",
+            "INTERVIEWING": "interviewing",
+            "REJECTED": "rejected",
+            "CLOSED": "closed",
+        }.get(self.value, self.value)
 
 
 class JobPosting(SQLModel, table=True):
@@ -34,8 +53,9 @@ class JobPosting(SQLModel, table=True):
     salary_range: Optional[str] = None
     job_type: Optional[str] = None
     experience_level: Optional[str] = None
+    status: JobStatus = JobStatus.NEW
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default=func.now())
 
     search_query_id: Optional[int] = Field(
         default=None,
@@ -102,7 +122,7 @@ class JobSummary(SQLModel, table=True):
                     """
     )
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default=func.now())
     job_posting_id: Optional[int] = Field(default=None, foreign_key="jobposting.id")
 
 
@@ -127,10 +147,14 @@ class ApplicantInfo(SQLModel, table=True):
     info_type: ApplicantInfoType = Field(
         description="""type of information, e.g. past experience, technical skill, project, education"""
     )
+    title: Optional[str] = Field(
+        default=None, description="""short title or heading for the info"""
+    )
     content: str = Field(
         description="""content of the information, e.g. description of past experience, technical skill, project, education"""
     )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default=func.now())
+    updated_at: Optional[datetime] = Field(default=func.now())
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
 
 
@@ -142,7 +166,7 @@ class ApplicationMaterials(SQLModel, table=True):
     resume: str = Field(
         description="""resume tailored to match job description with applicant's background & skills"""
     )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default=func.now())
     job_posting_id: Optional[int] = Field(default=None, foreign_key="jobposting.id")
 
 
@@ -156,8 +180,8 @@ class User(SQLModel, table=True):
     email_verified: bool = Field(
         default=False, description="""user has verified account from email"""
     )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default=func.now())
+    updated_at: datetime = Field(default=func.now())
 
 
 class CompanyInfo(SQLModel, table=True):
@@ -184,4 +208,17 @@ class CompanyInfo(SQLModel, table=True):
     potential_concerns: str = Field(
         description="""any potential concerns or red flags for job applicants"""
     )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default=func.now())
+
+
+class InterviewNotes(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: Optional[str] = Field(
+        default=None, description="""short title or heading for the interview notes"""
+    )
+    content: str = Field(
+        description="""notes taken during interviews, including questions asked, answers given, feedback received"""
+    )
+    created_at: datetime = Field(default=func.now())
+    updated_at: Optional[datetime] = Field(default=func.now())
+    job_posting_id: Optional[int] = Field(default=None, foreign_key="jobposting.id")

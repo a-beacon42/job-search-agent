@@ -5,6 +5,7 @@ from core.utils import group_by, disappearing_message
 from core.models import ApplicantInfoType, ApplicantInfo
 from core.repositories import UserRepo, JobPostingRepo, ApplicantInfoRepo
 from core.db import get_session
+from components.editable_applicant_info import render_editable_applicant_info
 
 
 st.set_page_config(page_title="Home", page_icon=":house:", layout="wide")
@@ -25,7 +26,7 @@ try:
         user_app_info = appl_info_repo.get_info_by_user_id(int(user_id))  # type: ignore[return-value]
     except Exception as e:
         st.error(f"Error loading logged in user: {str(e)}")
-        st.switch_page(page="/pages/login_register.py")
+        st.switch_page(page="pages/login_register.py")
 
     if user:
         st.title(f":green[Welcome, {user.first_name}]")
@@ -57,6 +58,11 @@ try:
             ):
                 info, info_type = st.columns([3, 1])
                 with info:
+                    st.text_input(
+                        label="Title or Heading (optional)",
+                        placeholder="e.g. Software Engineer at XYZ Corp",
+                        key="app_info_title",
+                    )
                     st.text_area(
                         label="Share something about your background",
                         placeholder="e.g. 5 years experience in software engineering...",
@@ -64,8 +70,10 @@ try:
                     )
                 with info_type:
                     option = st.selectbox(
-                        "What kind of info are you adding?",
-                        [info_type.display_name for info_type in ApplicantInfoType],
+                        label="What kind of info are you adding?",
+                        options=[
+                            info_type.display_name for info_type in ApplicantInfoType
+                        ],
                     )
                     submit_btn = st.form_submit_button("Add Info")
                 if submit_btn:
@@ -76,16 +84,19 @@ try:
                     new_app_info = appl_info_repo.add(
                         ApplicantInfo(
                             info_type=selected_type,
+                            title=st.session_state.get("app_info_title", ""),
                             content=st.session_state.get("app_info_content", ""),
                             user_id=user.id,
                         )
                     )
+                    # todo - update to use state management instead of rerun
+                    st.rerun()
                     disappearing_message(
                         st,
                         message="Applicant info added successfully!",
-                        msg_type=cast(type[str], "success"),
+                        msg_type="success",
                         duration=2,
-                    )  # type: ignore[call-arg]
+                    )
 
             st.subheader("about you:")
             if len(user_app_info) <= 0:
@@ -95,12 +106,7 @@ try:
                 for type, infos in grouped_app_info.items():
                     st.markdown(f"##### {type.display_name}")
                     for info in infos:
-                        st.markdown(f"* {info.content}")
-                # for info in user_app_info or []:
-                #     # todo -- group by type, make collapsible sections
-                #     st.markdown(f"**{info.info_type.display_name}**")
-                #     st.write(info.content)
-                #     st.markdown("---")
+                        render_editable_applicant_info(info)
 
     else:
         st.write(f"no logged in user found")
@@ -110,7 +116,7 @@ except Exception as e:
     disappearing_message(
         st=st,
         message="Unexpected error occurred. Please log in again.",
-        msg_type=cast(type[str], "error"),  # type: ignore[call-arg]
+        msg_type="error",
         duration=5,
     )
 
